@@ -3,10 +3,12 @@ import { DEBUG } from "./index";
 
 export class Bird {
 	p: p5;
-	x: number;
-	y: number;
-	v: number;
+	x: number = 0;
+	y: number = 0;
+	v: number = 0;
 	a: number = 0.618;
+
+	deathy: number = 0;
 	thrust: number = 10;
 	enabled: boolean = false;
 	dead: boolean = false;
@@ -14,45 +16,80 @@ export class Bird {
 	imgz: number = 12;
 	height: number = 0;
 	width: number = 0;
-	tolerance: number = 25;
+	tolerance: number = 0;
+
+	wastedImg: p5.Image | undefined;
 
 	constructor(p: p5) {
 		this.p = p;
-		this.x = this.p.width / 4;
-		this.y = this.p.height / 4;
+		this.restart();
+	}
+
+	restart() {
+		this.x = this.p.width / 6;
+		this.y = this.p.height / 2;
 		this.v = 0;
+		this.dead = false;
+		this.enabled = false;
 	}
 
 	setImg(img: p5.Image) {
 		this.img = img;
 		this.height = this.img.height / this.imgz;
 		this.width = this.img.width / this.imgz;
+		this.tolerance = this.height;
 	}
 
+	setWastedImg(img: p5.Image) {
+		this.wastedImg = img;
+	}
+
+	raise() {
+		this.v -= this.thrust;
+	}
+
+	shoot() {}
+
 	update() {
-		let outOfBounds = false;
-
-		if (this.bb().top <= this.tolerance) {
-			this.y = this.height / 2;
-			outOfBounds = true;
-			this.v = 0;
-		}
-		if (this.bb().bottom >= this.p.height - this.tolerance) {
-			this.y = this.p.height - this.height / 2;
-			outOfBounds = true;
-			this.v = 0;
-		}
-
-		if (!outOfBounds) {
-			if (this.y < this.p.height - this.tolerance && this.y > this.tolerance)
-				this.v += this.a;
-			this.y += this.v;
+		console.log(this.v);
+		if (!this.enabled) {
+			this.y =
+				this.p.height / 2 +
+				(1 / 2 / 2) * this.p.height * this.p.sin(this.p.frameCount / 60);
 		} else {
-			this.die();
+			let outOfBounds = false;
+
+			if (this.bb().top <= 0 + this.tolerance) {
+				outOfBounds = true;
+			}
+			if (this.bb().bottom >= this.p.height - this.tolerance) {
+				outOfBounds = true;
+			}
+
+			if (!outOfBounds) {
+				if (this.y < this.p.height - this.tolerance && this.y > this.tolerance)
+					this.v += this.a;
+				this.y += this.v;
+			} else {
+				this.die();
+			}
 		}
 	}
 
 	display() {
+		if (this.dead) {
+			this.p.background(255, 0, 0);
+			this.p.fill(0);
+			this.p.textAlign(this.p.CENTER, this.p.CENTER);
+			if (this.wastedImg)
+				this.p.image(
+					this.wastedImg,
+					0,
+					this.p.height / 2 - this.wastedImg.height / 2,
+				);
+			this.y = this.deathy;
+		}
+
 		if (this.img) {
 			this.p.push();
 			this.p.translate(this.x, this.y);
@@ -63,12 +100,15 @@ export class Bird {
 			);
 			this.p.scale(1 / this.imgz);
 
+			// bird draw
 			this.p.image(this.img, 0, 0);
 
 			this.p.pop();
 			this.p.pop();
 
 			if (DEBUG) {
+				this.p.stroke(0);
+
 				this.p.line(0, this.y, this.p.width, this.y);
 
 				this.p.line(0, this.bb().top, this.p.width, this.bb().top);
@@ -93,6 +133,7 @@ export class Bird {
 
 	die() {
 		this.dead = true;
+		this.deathy = this.y;
 	}
 
 	enable() {

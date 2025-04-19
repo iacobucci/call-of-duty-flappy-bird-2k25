@@ -14,7 +14,7 @@ export class Background {
 	}
 
 	tick() {
-		this.t += 2;
+		this.t += 0.8;
 		if (this.t >= this.img!.width) this.t = 0;
 	}
 

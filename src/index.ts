@@ -4,17 +4,22 @@ export const DEBUG = true;
 import { Bird } from "./bird";
 import { Background } from "./background";
 import { Title } from "./title";
+import { Pipe } from "./pipe";
 import { ud, Touch } from "./types";
 
 let bird: Bird;
 let background: Background;
 let title: Title;
 
+let pipes: Pipe[] = [];
+
 const images = {
 	bird: ud<p5.Image>(),
 	title: ud<p5.Image>(),
 	background: ud<p5.Image>(),
 	minigun: ud<p5.Image>(),
+	wasted: ud<p5.Image>(),
+	pipe: ud<p5.Image>(),
 };
 
 const sketch = (p: p5) => {
@@ -22,6 +27,8 @@ const sketch = (p: p5) => {
 		images.bird = p.loadImage("res/bird.webp");
 		images.title = p.loadImage("res/title.webp");
 		images.background = p.loadImage("res/background.webp");
+		images.wasted = p.loadImage("res/wasted.webp");
+		images.pipe = p.loadImage("res/pipe.webp");
 	};
 
 	p.setup = () => {
@@ -32,6 +39,7 @@ const sketch = (p: p5) => {
 
 		bird = new Bird(p);
 		bird.setImg(images.bird);
+		bird.setWastedImg(images.wasted);
 
 		background = new Background(p);
 		background.setImg(images.background);
@@ -44,14 +52,34 @@ const sketch = (p: p5) => {
 		p.background(0);
 		background.display();
 		background.tick();
+
+		if (bird.enabled) {
+			if (p.frameCount % 120 == 0) {
+				let pipe = new Pipe(p);
+				pipe.setImg(images.pipe);
+				pipes.push(pipe);
+			}
+
+			for (let pipe of pipes) {
+				pipe.display();
+				pipe.update();
+			}
+		}
+
 		bird.display();
+		bird.update();
 		title.display();
 	};
 
 	p.keyPressed = () => {
-		if (p.key == "t") {
-			title.hide();
-			bird.enable();
+		onTap();
+
+		if (p.key == "j") {
+			onRightTap();
+		}
+
+		if (p.key == "k") {
+			onLeftTap();
 		}
 	};
 
@@ -65,6 +93,8 @@ const sketch = (p: p5) => {
 			if (!activeTouchIds.has(touch.identifier)) {
 				activeTouchIds.add(touch.identifier);
 
+				onTap();
+
 				if (touch.x < p.width / 2) {
 					onLeftTap();
 				} else {
@@ -74,6 +104,7 @@ const sketch = (p: p5) => {
 		}
 		return false;
 	};
+
 	p.touchEnded = () => {
 		const stillActive = new Set<number>();
 		for (const t of p.touches) {
@@ -89,10 +120,20 @@ const sketch = (p: p5) => {
 		return false;
 	};
 
+	const onTap = () => {
+		title.hide();
+		if (!bird.enabled) bird.enable();
+	};
+
 	const onLeftTap = () => {
+		bird.shoot();
 	};
 
 	const onRightTap = () => {
+		if (bird.dead) {
+			bird.restart();
+			pipes = [];
+		} else bird.raise();
 	};
 };
 
