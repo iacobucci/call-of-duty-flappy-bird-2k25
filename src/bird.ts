@@ -31,6 +31,7 @@ export class Bird {
 	beamImg: p5.Image | undefined;
 	minigunImg: p5.Image | undefined;
 	shooting = false;
+	aimease = 4;
 
 	constructor(p: p5) {
 		this.p = p;

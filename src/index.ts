@@ -33,6 +33,8 @@ const images = {
 	kitten5: ud<p5.Image>(),
 };
 
+const KITTEN_PROB = 0.4
+
 let font: p5.Font | undefined;
 
 const sketch = (p: p5) => {
@@ -121,22 +123,40 @@ const sketch = (p: p5) => {
 				}
 			}
 
-			if (p.frameCount % 240 == 0) {
-				let kitten = new Kitten(p);
-				let r = p.random(0, 6);
-
-				kitten.setImg(images.kitten5);
-				if (r < 4) kitten.setImg(images.kitten4);
-				if (r < 3) kitten.setImg(images.kitten3);
-				if (r < 2) kitten.setImg(images.kitten2);
-				if (r < 1) kitten.setImg(images.kitten1);
-
-				kittens.push(kitten);
+			if (p.frameCount % 150 == 0) {
+				if (p.random(0, 1) < KITTEN_PROB) addKitten();
 			}
 
 			for (let kitten of kittens) {
 				kitten.update();
 				kitten.display();
+
+				if (kitten.stage == 0) {
+					if (kitten.bb().left < bird.bb().right) {
+						if (
+							!(
+								bird.bb().bottom > kitten.bb().bottom ||
+								bird.bb().top < kitten.bb().top
+							)
+						) {
+							bird.die();
+						}
+					}
+					if (kitten.bb().right <= bird.bb().left) {
+						kitten.advanceStage();
+					}
+				}
+
+				if (bird.shooting) {
+					if (
+						kitten.bb().top <= bird.y + bird.aimease &&
+						kitten.bb().bottom >= bird.y - bird.aimease &&
+						bird.bb().right <= kitten.bb().left
+					) {
+						score++;
+						kitten.die();
+					}
+				}
 			}
 		}
 
@@ -230,6 +250,19 @@ const sketch = (p: p5) => {
 				}
 			} else bird.raise();
 		}
+	};
+
+	const addKitten = () => {
+		let kitten = new Kitten(p);
+		let r = p.random(0, 6);
+
+		kitten.setImg(images.kitten5);
+		if (r < 4) kitten.setImg(images.kitten4);
+		if (r < 3) kitten.setImg(images.kitten3);
+		if (r < 2) kitten.setImg(images.kitten2);
+		if (r < 1) kitten.setImg(images.kitten1);
+
+		kittens.push(kitten);
 	};
 };
 

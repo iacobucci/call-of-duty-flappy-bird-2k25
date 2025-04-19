@@ -6,6 +6,7 @@ export class Kitten {
 
 	x: number;
 	y: number;
+	basey: number;
 	width: number = 80;
 	height: number = 80;
 
@@ -18,14 +19,17 @@ export class Kitten {
 
 	clearance: number = 200;
 
+	explosiont: number = 0;
+	dead = false;
+
 	constructor(p: p5) {
 		this.p = p;
-		this.y = this.p.random(this.clearance, this.p.height - this.clearance);
+		this.basey = this.p.random(this.clearance, this.p.height - this.clearance);
+		this.y = this.basey;
 		this.x = this.p.width + this.width;
 
-		this.speed = this.p.random(2,4);
-		this.amplitude = this.p.random(0, 300);
-
+		this.speed = this.p.random(2, 4);
+		this.amplitude = this.p.random(0, 100);
 	}
 
 	setImg(img: p5.Image) {
@@ -34,9 +38,7 @@ export class Kitten {
 
 	update() {
 		this.x -= this.speed;
-
-		this.x = this.p.width/2;
-		this.y = this.p.height/2;
+		this.y = this.basey + this.amplitude * this.p.sin(this.p.frameCount / 30);
 	}
 
 	display() {
@@ -47,11 +49,12 @@ export class Kitten {
 
 		if (this.img) {
 			this.p.push();
-			this.p.translate(-this.img.width / 2, -this.img.height / 2);
 			this.p.scale(this.width / this.img.width, this.height / this.img.height);
-			this.p.image(this.img, 0, 0);
+			if (!this.dead)
+				this.p.image(this.img, -this.img.width / 2, -this.img.height / 2);
 			this.p.pop();
 		}
+
 		this.p.pop();
 
 		if (DEBUG) {
@@ -60,6 +63,14 @@ export class Kitten {
 			this.p.line(this.bb().left, 0, this.bb().left, this.p.height);
 			this.p.line(this.bb().right, 0, this.bb().right, this.p.height);
 		}
+	}
+
+	die() {
+		this.dead = true;
+	}
+
+	advanceStage() {
+		this.stage++;
 	}
 
 	bb() {
