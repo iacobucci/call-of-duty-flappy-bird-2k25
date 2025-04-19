@@ -31,9 +31,10 @@ const images = {
 	kitten3: ud<p5.Image>(),
 	kitten4: ud<p5.Image>(),
 	kitten5: ud<p5.Image>(),
+	explosion: ud<p5.Image>(),
 };
 
-const KITTEN_PROB = 0.4
+const KITTEN_PROB = 0.4;
 
 let font: p5.Font | undefined;
 
@@ -51,6 +52,7 @@ const sketch = (p: p5) => {
 		images.kitten3 = p.loadImage("res/kitten3.webp");
 		images.kitten4 = p.loadImage("res/kitten4.webp");
 		images.kitten5 = p.loadImage("res/kitten5.webp");
+		images.explosion = p.loadImage("res/explosion.webp");
 		font = p.loadFont("res/minecraft.ttf");
 	};
 
@@ -135,14 +137,15 @@ const sketch = (p: p5) => {
 					if (kitten.bb().left < bird.bb().right) {
 						if (
 							!(
-								bird.bb().bottom > kitten.bb().bottom ||
-								bird.bb().top < kitten.bb().top
+								bird.bb().bottom + bird.easer >
+									kitten.bb().bottom - kitten.easer ||
+								bird.bb().top - bird.easer < kitten.bb().top + kitten.easer
 							)
 						) {
-							bird.die();
+							if (!kitten.dead) bird.die();
 						}
 					}
-					if (kitten.bb().right <= bird.bb().left) {
+					if (kitten.bb().right - kitten.easer * 2 <= bird.bb().left) {
 						kitten.advanceStage();
 					}
 				}
@@ -153,7 +156,8 @@ const sketch = (p: p5) => {
 						kitten.bb().bottom >= bird.y - bird.aimease &&
 						bird.bb().right <= kitten.bb().left
 					) {
-						score++;
+						if (!bird.dead)
+							score++;
 						kitten.die();
 					}
 				}
@@ -261,6 +265,8 @@ const sketch = (p: p5) => {
 		if (r < 3) kitten.setImg(images.kitten3);
 		if (r < 2) kitten.setImg(images.kitten2);
 		if (r < 1) kitten.setImg(images.kitten1);
+
+		kitten.setExplosionImg(images.explosion);
 
 		kittens.push(kitten);
 	};

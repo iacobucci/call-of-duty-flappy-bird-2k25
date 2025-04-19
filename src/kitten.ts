@@ -16,10 +16,14 @@ export class Kitten {
 	stage: number = 0;
 
 	img: p5.Image | undefined;
+	explosionImg: p5.Image | undefined;
 
 	clearance: number = 200;
-
 	explosiont: number = 0;
+	explosionlength: number = 4;
+
+	easer: number = 12;
+
 	dead = false;
 
 	constructor(p: p5) {
@@ -34,6 +38,10 @@ export class Kitten {
 
 	setImg(img: p5.Image) {
 		this.img = img;
+	}
+
+	setExplosionImg(img: p5.Image) {
+		this.explosionImg = img;
 	}
 
 	update() {
@@ -55,6 +63,25 @@ export class Kitten {
 			this.p.pop();
 		}
 
+		if (this.explosionImg) {
+			if (this.p.frameCount <= this.explosiont + this.explosionlength) {
+
+				let step = this.p.frameCount - this.explosiont;
+
+				this.p.push();
+				this.p.scale(
+					((step * step * 0.3) * this.width) / this.explosionImg.width,
+					((step * step * 0.3) * this.height) / this.explosionImg.height,
+				);
+				this.p.image(
+					this.explosionImg,
+					-this.explosionImg.width / 2,
+					-this.explosionImg.height / 2,
+				);
+				this.p.pop();
+			}
+		}
+
 		this.p.pop();
 
 		if (DEBUG) {
@@ -66,6 +93,7 @@ export class Kitten {
 	}
 
 	die() {
+		this.explosiont = this.p.frameCount;
 		this.dead = true;
 	}
 
