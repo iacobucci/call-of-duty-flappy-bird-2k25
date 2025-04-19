@@ -44,11 +44,11 @@ const sketch = (p: p5) => {
 		images.pipe = p.loadImage("res/pipe.webp");
 		images.beam = p.loadImage("res/beam.webp");
 		images.minigun = p.loadImage("res/minigun.webp");
-		// images.kitten1 = p.loadImage("res/kitten1.webp");
-		// images.kitten2 = p.loadImage("res/kitten2.webp");
-		// images.kitten3 = p.loadImage("res/kitten3.webp");
-		// images.kitten4 = p.loadImage("res/kitten4.webp");
-		// images.kitten5 = p.loadImage("res/kitten5.webp");
+		images.kitten1 = p.loadImage("res/kitten1.webp");
+		images.kitten2 = p.loadImage("res/kitten2.webp");
+		images.kitten3 = p.loadImage("res/kitten3.webp");
+		images.kitten4 = p.loadImage("res/kitten4.webp");
+		images.kitten5 = p.loadImage("res/kitten5.webp");
 		font = p.loadFont("res/minecraft.ttf");
 	};
 
@@ -135,8 +135,8 @@ const sketch = (p: p5) => {
 			}
 
 			for (let kitten of kittens) {
-				kitten.display();
 				kitten.update();
+				kitten.display();
 			}
 		}
 
@@ -224,6 +224,7 @@ const sketch = (p: p5) => {
 				if (p.frameCount >= bird.deathframe + 5) {
 					bird.restart();
 					pipes = [];
+					kittens = [];
 					score = 0;
 					title.shown = true;
 				}

@@ -9,7 +9,7 @@ export class Kitten {
 	width: number = 80;
 	height: number = 80;
 
-	speed: number = 0;
+	speed: number = 3;
 	amplitude: number = 0;
 
 	stage: number = 0;
@@ -22,6 +22,10 @@ export class Kitten {
 		this.p = p;
 		this.y = this.p.random(this.clearance, this.p.height - this.clearance);
 		this.x = this.p.width + this.width;
+
+		this.speed = this.p.random(2,4);
+		this.amplitude = this.p.random(0, 300);
+
 	}
 
 	setImg(img: p5.Image) {
@@ -30,17 +34,24 @@ export class Kitten {
 
 	update() {
 		this.x -= this.speed;
+
+		this.x = this.p.width/2;
+		this.y = this.p.height/2;
 	}
 
 	display() {
-		// dont draw pipes if out of the way
 		if (this.x < -this.width) return;
 
 		this.p.push();
-		this.p.translate(-this.width / 2, -this.height / 2);
+		this.p.translate(this.x, this.y);
 
-		if (this.img) this.p.image(this.img, 0, 0);
-
+		if (this.img) {
+			this.p.push();
+			this.p.translate(-this.img.width / 2, -this.img.height / 2);
+			this.p.scale(this.width / this.img.width, this.height / this.img.height);
+			this.p.image(this.img, 0, 0);
+			this.p.pop();
+		}
 		this.p.pop();
 
 		if (DEBUG) {
