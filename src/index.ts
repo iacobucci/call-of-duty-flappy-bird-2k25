@@ -57,34 +57,42 @@ const sketch = (p: p5) => {
 
 	p.keyReleased = () => {};
 
-	let leftPressed = false;
-	let rightPressed = true;
+	let activeTouchIds: Set<number> = new Set();
 
 	p.touchStarted = () => {
-		for (let t of p.touches) {
-			if ((t as Touch).x < p.width / 2) {
-				leftPressed = true;
-			} else {
-				rightPressed = true;
+		for (const t of p.touches) {
+			const touch = t as Touch;
+			if (!activeTouchIds.has(touch.identifier)) {
+				activeTouchIds.add(touch.identifier);
+
+				if (touch.x < p.width / 2) {
+					onLeftTap();
+				} else {
+					onRightTap();
+				}
 			}
 		}
-		return false; // Previene lo scrolling su mobile
+		return false;
 	};
 	p.touchEnded = () => {
-		// Quando un tocco finisce, controlliamo quanti ne restano
-		// Se non ci sono più tocchi in una metà, disattiviamo il flag
-		let stillLeft = false;
-		let stillRight = false;
-
-		for (let t of p.touches) {
-			if ((t as Touch).x < p.width / 2) stillLeft = true;
-			else stillRight = true;
+		const stillActive = new Set<number>();
+		for (const t of p.touches) {
+			const touch = t as Touch;
+			stillActive.add(touch.identifier);
 		}
 
-		leftPressed = stillLeft;
-		rightPressed = stillRight;
-
+		for (const id of Array.from(activeTouchIds)) {
+			if (!stillActive.has(id)) {
+				activeTouchIds.delete(id);
+			}
+		}
 		return false;
+	};
+
+	const onLeftTap = () => {
+	};
+
+	const onRightTap = () => {
 	};
 };
 
