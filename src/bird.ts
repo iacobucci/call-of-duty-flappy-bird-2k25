@@ -7,19 +7,30 @@ export class Bird {
 	y: number = 0;
 	v: number = 0;
 	a: number = 0.618;
-
-	deathy: number = 0;
 	thrust: number = 10;
+
 	enabled: boolean = false;
+
 	dead: boolean = false;
+	deathy: number = 0;
+	deathframe: number = 0;
+
 	img: p5.Image | undefined;
 	imgz: number = 12;
 	height: number = 0;
 	width: number = 0;
+
 	tolerance: number = 0;
-	easer: number = 20;
+	easer: number = 10;
 
 	wastedImg: p5.Image | undefined;
+
+	ammo: number = 0;
+	shotlength: number = 4;
+	shotframe: number = -this.shotlength;
+	beamImg: p5.Image | undefined;
+	minigunImg: p5.Image | undefined;
+	shooting = false;
 
 	constructor(p: p5) {
 		this.p = p;
@@ -32,6 +43,7 @@ export class Bird {
 		this.v = 0;
 		this.dead = false;
 		this.enabled = false;
+		this.ammo = 0;
 	}
 
 	setImg(img: p5.Image) {
@@ -45,11 +57,24 @@ export class Bird {
 		this.wastedImg = img;
 	}
 
+	setBeamImg(img: p5.Image) {
+		this.beamImg = img;
+	}
+
+	setMinigunImg(img: p5.Image) {
+		this.minigunImg = img;
+	}
+
 	raise() {
 		this.v -= this.thrust;
 	}
 
-	shoot() {}
+	shoot() {
+		if (!this.dead && this.ammo > 0) {
+			this.shotframe = this.p.frameCount;
+			this.ammo--;
+		}
+	}
 
 	update() {
 		if (!this.enabled) {
@@ -59,6 +84,11 @@ export class Bird {
 		} else {
 			if (this.dead) {
 				return;
+			}
+
+			this.shooting = false;
+			if (this.p.frameCount <= this.shotframe + this.shotlength) {
+				this.shooting = true;
 			}
 
 			let outOfBounds = false;
@@ -85,7 +115,6 @@ export class Bird {
 		if (this.dead) {
 			this.p.background(255, 0, 0);
 			this.p.fill(0);
-			this.p.textAlign(this.p.CENTER, this.p.CENTER);
 			if (this.wastedImg)
 				this.p.image(
 					this.wastedImg,
@@ -97,17 +126,48 @@ export class Bird {
 		if (this.img) {
 			this.p.push();
 			this.p.translate(this.x, this.y);
+
+			// bird
 			this.p.push();
 			this.p.translate(
 				-this.img.width / this.imgz / 2,
 				-this.img.height / this.imgz / 2,
 			);
 			this.p.scale(1 / this.imgz);
-
-			// bird draw
 			this.p.image(this.img, 0, 0);
-
 			this.p.pop();
+
+			// minigun
+			if (this.ammo > 0) {
+				this.p.push();
+				if (this.minigunImg) {
+					this.p.scale(0.185);
+
+					this.p.rotate(-this.p.PI / 32);
+
+					this.p.translate(
+						-this.minigunImg.width / 2 + 120,
+						-this.minigunImg.height / 2 + 120,
+					);
+					this.p.image(this.minigunImg, 0, 0);
+				}
+				this.p.pop();
+			}
+
+			// beam
+			if (this.p.frameCount <= this.shotframe + this.shotlength) {
+				this.p.push();
+				if (this.beamImg) {
+					this.p.translate(
+						-this.beamImg.width / 2 + 30,
+						-this.beamImg.height / 2 + 10,
+					);
+					this.p.rotate(-this.p.PI / 128);
+					this.p.image(this.beamImg, 0, 0);
+				}
+				this.p.pop();
+			}
+
 			this.p.pop();
 
 			if (DEBUG) {
@@ -138,10 +198,15 @@ export class Bird {
 	die() {
 		this.dead = true;
 		this.deathy = this.y;
+		this.deathframe = this.p.frameCount;
 		this.v = 0;
 	}
 
 	enable() {
 		this.enabled = true;
+	}
+
+	addAmmo() {
+		this.ammo += 1;
 	}
 }

@@ -5,6 +5,7 @@ import { Bird } from "./bird";
 import { Background } from "./background";
 import { Title } from "./title";
 import { Pipe } from "./pipe";
+import { Kitten } from "./kitten";
 import { ud, Touch } from "./types";
 
 let bird: Bird;
@@ -15,6 +16,7 @@ let score: number = 0;
 let highscore: number = 0;
 
 let pipes: Pipe[] = [];
+let kittens: Kitten[] = [];
 
 const images = {
 	bird: ud<p5.Image>(),
@@ -23,7 +25,15 @@ const images = {
 	minigun: ud<p5.Image>(),
 	wasted: ud<p5.Image>(),
 	pipe: ud<p5.Image>(),
+	beam: ud<p5.Image>(),
+	kitten1: ud<p5.Image>(),
+	kitten2: ud<p5.Image>(),
+	kitten3: ud<p5.Image>(),
+	kitten4: ud<p5.Image>(),
+	kitten5: ud<p5.Image>(),
 };
+
+let font: p5.Font | undefined;
 
 const sketch = (p: p5) => {
 	p.preload = () => {
@@ -32,6 +42,14 @@ const sketch = (p: p5) => {
 		images.background = p.loadImage("res/background.webp");
 		images.wasted = p.loadImage("res/wasted.webp");
 		images.pipe = p.loadImage("res/pipe.webp");
+		images.beam = p.loadImage("res/beam.webp");
+		images.minigun = p.loadImage("res/minigun.webp");
+		// images.kitten1 = p.loadImage("res/kitten1.webp");
+		// images.kitten2 = p.loadImage("res/kitten2.webp");
+		// images.kitten3 = p.loadImage("res/kitten3.webp");
+		// images.kitten4 = p.loadImage("res/kitten4.webp");
+		// images.kitten5 = p.loadImage("res/kitten5.webp");
+		font = p.loadFont("res/minecraft.ttf");
 	};
 
 	p.setup = () => {
@@ -43,12 +61,23 @@ const sketch = (p: p5) => {
 		bird = new Bird(p);
 		bird.setImg(images.bird);
 		bird.setWastedImg(images.wasted);
+		bird.setBeamImg(images.beam);
+		bird.setMinigunImg(images.minigun);
 
 		background = new Background(p);
 		background.setImg(images.background);
 
 		title = new Title(p);
 		title.setImg(images.title);
+
+		if (font) p.textFont(font);
+		p.textSize(20);
+		p.textAlign(p.CENTER, p.CENTER);
+
+		let hs = localStorage.getItem("highscore");
+		if (hs) {
+			highscore = Number.parseInt(hs);
+		}
 	};
 
 	p.draw = () => {
@@ -75,20 +104,55 @@ const sketch = (p: p5) => {
 							bird.bb().top < pipe.bb().top
 						) {
 							bird.die();
-							score = 0;
 						}
 					}
 					if (pipe.bb().right <= bird.bb().left) {
 						pipe.advanceStage();
-						score++;
-						if (highscore <= score) highscore = score;
+
+						if (!bird.dead) {
+							score++;
+							bird.addAmmo();
+							if (highscore <= score) {
+								highscore = score;
+								localStorage.setItem("highscore", "" + highscore);
+							}
+						}
 					}
 				}
 			}
+
+			if (p.frameCount % 240 == 0) {
+				let kitten = new Kitten(p);
+				let r = p.random(0, 6);
+
+				kitten.setImg(images.kitten5);
+				if (r < 4) kitten.setImg(images.kitten4);
+				if (r < 3) kitten.setImg(images.kitten3);
+				if (r < 2) kitten.setImg(images.kitten2);
+				if (r < 1) kitten.setImg(images.kitten1);
+
+				kittens.push(kitten);
+			}
+
+			for (let kitten of kittens) {
+				kitten.display();
+				kitten.update();
+			}
 		}
 
-		bird.display();
+		p.fill(255);
+
 		title.display();
+
+		p.text("AMMO = " + bird.ammo, p.width / 2, p.height - p.height / 12);
+
+		bird.display();
+
+		p.text(
+			"SCORE = " + score + " - " + "HIGH = " + highscore,
+			p.width / 2,
+			p.height / 12,
+		);
 	};
 
 	p.keyPressed = () => {
@@ -157,8 +221,12 @@ const sketch = (p: p5) => {
 	const onRightTap = () => {
 		if (bird) {
 			if (bird.dead) {
-				bird.restart();
-				pipes = [];
+				if (p.frameCount >= bird.deathframe + 5) {
+					bird.restart();
+					pipes = [];
+					score = 0;
+					title.shown = true;
+				}
 			} else bird.raise();
 		}
 	};
