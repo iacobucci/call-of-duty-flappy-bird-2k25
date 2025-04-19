@@ -1,5 +1,5 @@
 import p5 from "p5";
-export const DEBUG = true;
+export const DEBUG = false;
 
 import { Bird } from "./bird";
 import { Background } from "./background";
@@ -10,6 +10,9 @@ import { ud, Touch } from "./types";
 let bird: Bird;
 let background: Background;
 let title: Title;
+
+let score: number = 0;
+let highscore: number = 0;
 
 let pipes: Pipe[] = [];
 
@@ -52,6 +55,7 @@ const sketch = (p: p5) => {
 		p.background(0);
 		background.display();
 		background.tick();
+		bird.update();
 
 		if (bird.enabled) {
 			if (p.frameCount % 120 == 0) {
@@ -63,11 +67,27 @@ const sketch = (p: p5) => {
 			for (let pipe of pipes) {
 				pipe.display();
 				pipe.update();
+
+				if (pipe.stage == 0) {
+					if (pipe.bb().left < bird.bb().right) {
+						if (
+							bird.bb().bottom > pipe.bb().bottom ||
+							bird.bb().top < pipe.bb().top
+						) {
+							bird.die();
+							score = 0;
+						}
+					}
+					if (pipe.bb().right <= bird.bb().left) {
+						pipe.advanceStage();
+						score++;
+						if (highscore <= score) highscore = score;
+					}
+				}
 			}
 		}
 
 		bird.display();
-		bird.update();
 		title.display();
 	};
 
@@ -121,19 +141,26 @@ const sketch = (p: p5) => {
 	};
 
 	const onTap = () => {
-		title.hide();
-		if (!bird.enabled) bird.enable();
+		if (title) title.hide();
+
+		if (bird) {
+			if (!bird.enabled) bird.enable();
+		}
 	};
 
 	const onLeftTap = () => {
-		bird.shoot();
+		if (bird) {
+			bird.shoot();
+		}
 	};
 
 	const onRightTap = () => {
-		if (bird.dead) {
-			bird.restart();
-			pipes = [];
-		} else bird.raise();
+		if (bird) {
+			if (bird.dead) {
+				bird.restart();
+				pipes = [];
+			} else bird.raise();
+		}
 	};
 };
 

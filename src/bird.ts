@@ -17,6 +17,7 @@ export class Bird {
 	height: number = 0;
 	width: number = 0;
 	tolerance: number = 0;
+	easer: number = 20;
 
 	wastedImg: p5.Image | undefined;
 
@@ -51,24 +52,28 @@ export class Bird {
 	shoot() {}
 
 	update() {
-		console.log(this.v);
 		if (!this.enabled) {
 			this.y =
 				this.p.height / 2 +
 				(1 / 2 / 2) * this.p.height * this.p.sin(this.p.frameCount / 60);
 		} else {
+			if (this.dead) {
+				return;
+			}
+
 			let outOfBounds = false;
 
-			if (this.bb().top <= 0 + this.tolerance) {
+			if (this.bb().top + this.easer <= 0 + this.tolerance) {
 				outOfBounds = true;
 			}
-			if (this.bb().bottom >= this.p.height - this.tolerance) {
+			if (this.bb().bottom - this.easer >= this.p.height - this.tolerance) {
 				outOfBounds = true;
 			}
 
 			if (!outOfBounds) {
 				if (this.y < this.p.height - this.tolerance && this.y > this.tolerance)
 					this.v += this.a;
+
 				this.y += this.v;
 			} else {
 				this.die();
@@ -87,7 +92,6 @@ export class Bird {
 					0,
 					this.p.height / 2 - this.wastedImg.height / 2,
 				);
-			this.y = this.deathy;
 		}
 
 		if (this.img) {
@@ -124,8 +128,8 @@ export class Bird {
 
 	bb() {
 		return {
-			top: this.y + this.height / 2,
-			bottom: this.y - this.height / 2,
+			top: this.y + this.height / 2 - this.easer,
+			bottom: this.y - this.height / 2 + this.easer,
 			left: this.x - this.width / 2,
 			right: this.x + this.width / 2,
 		};
@@ -134,6 +138,7 @@ export class Bird {
 	die() {
 		this.dead = true;
 		this.deathy = this.y;
+		this.v = 0;
 	}
 
 	enable() {
