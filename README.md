@@ -10,5 +10,5 @@
 ## Controls
 
 On desktop: `J` for jump and `K` for shoot!
-On mobile: tap `right half of the screen` to jump and `left half of the screen to shoot`!
+On mobile: tap `right half of the screen` to jump and `left half of the screen` to shoot!
 
