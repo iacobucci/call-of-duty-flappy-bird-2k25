@@ -1,4 +1,10 @@
 import p5 from "p5";
+
+// @ts-ignore
+window.p5 = p5; // forziamo la globalità
+
+import "p5/lib/addons/p5.sound";
+
 export const DEBUG = false;
 
 import { Bird } from "./bird";
@@ -34,9 +40,16 @@ const images = {
 	explosion: ud<p5.Image>(),
 };
 
+const sounds = {
+	death: ud<p5.SoundFile>(),
+	laser: ud<p5.SoundFile>(),
+	explosion: ud<p5.SoundFile>(),
+};
+
 const KITTEN_PROB = 0.4;
 
 let font: p5.Font | undefined;
+let wastedFont: p5.Font | undefined;
 
 const sketch = (p: p5) => {
 	p.preload = () => {
@@ -54,6 +67,10 @@ const sketch = (p: p5) => {
 		images.kitten5 = p.loadImage("res/kitten5.webp");
 		images.explosion = p.loadImage("res/explosion.webp");
 		font = p.loadFont("res/minecraft.ttf");
+		wastedFont = p.loadFont("res/gta.ttf");
+		sounds.death = p.loadSound("res/death.wav");
+		sounds.laser = p.loadSound("res/laser.wav");
+		sounds.explosion = p.loadSound("res/explosion.wav");
 	};
 
 	p.setup = () => {
@@ -67,6 +84,7 @@ const sketch = (p: p5) => {
 		bird.setWastedImg(images.wasted);
 		bird.setBeamImg(images.beam);
 		bird.setMinigunImg(images.minigun);
+		bird.deathfunc = playDeath;
 
 		background = new Background(p);
 		background.setImg(images.background);
@@ -74,7 +92,6 @@ const sketch = (p: p5) => {
 		title = new Title(p);
 		title.setImg(images.title);
 
-		if (font) p.textFont(font);
 		p.textSize(20);
 		p.textAlign(p.CENTER, p.CENTER);
 
@@ -107,6 +124,7 @@ const sketch = (p: p5) => {
 							bird.bb().bottom > pipe.bb().bottom ||
 							bird.bb().top < pipe.bb().top
 						) {
+							playDeath();
 							bird.die();
 						}
 					}
@@ -114,7 +132,9 @@ const sketch = (p: p5) => {
 						pipe.advanceStage();
 
 						if (!bird.dead) {
-							score++;
+							{
+								score++;
+							}
 							bird.addAmmo();
 							if (highscore <= score) {
 								highscore = score;
@@ -142,7 +162,10 @@ const sketch = (p: p5) => {
 								bird.bb().top - bird.easer < kitten.bb().top + kitten.easer
 							)
 						) {
-							if (!kitten.dead) bird.die();
+							if (!kitten.dead) {
+								playDeath();
+								bird.die();
+							}
 						}
 					}
 					if (kitten.bb().right - kitten.easer * 2 <= bird.bb().left) {
@@ -156,8 +179,14 @@ const sketch = (p: p5) => {
 						kitten.bb().bottom >= bird.y - bird.aimease &&
 						bird.bb().right <= kitten.bb().left
 					) {
-						if (!bird.dead)
+						if (!bird.dead) {
 							score++;
+						}
+
+						if (sounds.explosion && !sounds.explosion.isPlaying() && !bird.dead) {
+							sounds.explosion.play();
+						}
+
 						kitten.die();
 					}
 				}
@@ -168,9 +197,16 @@ const sketch = (p: p5) => {
 
 		title.display();
 
+		if (font) p.textFont(font);
+		p.textSize(20);
+
 		p.text("AMMO = " + bird.ammo, p.width / 2, p.height - p.height / 12);
 
+		if (wastedFont) p.textFont(wastedFont);
 		bird.display();
+
+		if (font) p.textFont(font);
+		p.textSize(20);
 
 		p.text(
 			"SCORE = " + score + " - " + "HIGH = " + highscore,
@@ -239,6 +275,11 @@ const sketch = (p: p5) => {
 	const onLeftTap = () => {
 		if (bird) {
 			bird.shoot();
+			if (bird.ammo > 0) {
+				if (sounds.laser && !sounds.laser.isPlaying() && !bird.dead) {
+					sounds.laser.play();
+				}
+			}
 		}
 	};
 
@@ -252,7 +293,10 @@ const sketch = (p: p5) => {
 					score = 0;
 					title.shown = true;
 				}
-			} else bird.raise();
+			} else {
+				// add sound
+				bird.raise();
+			}
 		}
 	};
 
@@ -270,6 +314,12 @@ const sketch = (p: p5) => {
 
 		kittens.push(kitten);
 	};
+};
+
+export const playDeath = () => {
+	if (sounds.death && !sounds.death.isPlaying() && !bird.dead) {
+		sounds.death.play();
+	}
 };
 
 new p5(sketch);

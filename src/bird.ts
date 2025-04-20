@@ -1,5 +1,6 @@
 import p5 from "p5";
 import { DEBUG } from "./index";
+import { playDeath } from "./index";
 
 export class Bird {
 	p: p5;
@@ -14,6 +15,7 @@ export class Bird {
 	dead: boolean = false;
 	deathy: number = 0;
 	deathframe: number = 0;
+	deathfunc: any;
 
 	img: p5.Image | undefined;
 	imgz: number = 12;
@@ -107,21 +109,25 @@ export class Bird {
 
 				this.y += this.v;
 			} else {
+				this.deathfunc();
 				this.die();
 			}
 		}
 	}
 
+
 	display() {
 		if (this.dead) {
 			this.p.background(255, 0, 0);
 			this.p.fill(0);
-			if (this.wastedImg)
-				this.p.image(
-					this.wastedImg,
-					0,
-					this.p.height / 2 - this.wastedImg.height / 2,
-				);
+
+			let t = this.p.frameCount - this.deathframe;
+
+			if (t <= 5) {
+				this.p.textSize((5 - t) * (5 - t) * 6);
+			}
+
+			this.p.text("wasted", this.p.width / 2, this.p.height / 2);
 		}
 
 		if (this.img) {
@@ -197,9 +203,9 @@ export class Bird {
 	}
 
 	die() {
+		if (!this.dead) this.deathframe = this.p.frameCount;
 		this.dead = true;
 		this.deathy = this.y;
-		this.deathframe = this.p.frameCount;
 		this.v = 0;
 	}
 
