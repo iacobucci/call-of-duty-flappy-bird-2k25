@@ -44,6 +44,8 @@ const sounds = {
 	death: ud<p5.SoundFile>(),
 	laser: ud<p5.SoundFile>(),
 	explosion: ud<p5.SoundFile>(),
+	flap: ud<p5.SoundFile>(),
+	coin: ud<p5.SoundFile>(),
 };
 
 const KITTEN_PROB = 0.4;
@@ -71,6 +73,8 @@ const sketch = (p: p5) => {
 		sounds.death = p.loadSound("res/death.wav");
 		sounds.laser = p.loadSound("res/laser.wav");
 		sounds.explosion = p.loadSound("res/explosion.wav");
+		sounds.flap = p.loadSound("res/flap.mp3");
+		sounds.coin = p.loadSound("res/coin.mp3");
 	};
 
 	p.setup = () => {
@@ -129,10 +133,15 @@ const sketch = (p: p5) => {
 						}
 					}
 					if (pipe.bb().right <= bird.bb().left) {
-						pipe.advanceStage();
+						{
+							pipe.advanceStage();
+						}
 
 						if (!bird.dead) {
 							{
+								if (sounds.coin && !sounds.coin.isPlaying() && !bird.dead) {
+									sounds.coin.play();
+								}
 								score++;
 							}
 							bird.addAmmo();
@@ -183,7 +192,11 @@ const sketch = (p: p5) => {
 							score++;
 						}
 
-						if (sounds.explosion && !sounds.explosion.isPlaying() && !bird.dead) {
+						if (
+							sounds.explosion &&
+							!sounds.explosion.isPlaying() &&
+							!bird.dead
+						) {
 							sounds.explosion.play();
 						}
 
@@ -274,12 +287,12 @@ const sketch = (p: p5) => {
 
 	const onLeftTap = () => {
 		if (bird) {
-			bird.shoot();
 			if (bird.ammo > 0) {
 				if (sounds.laser && !sounds.laser.isPlaying() && !bird.dead) {
 					sounds.laser.play();
 				}
 			}
+			bird.shoot();
 		}
 	};
 
@@ -295,6 +308,9 @@ const sketch = (p: p5) => {
 				}
 			} else {
 				// add sound
+				if (sounds.flap && !bird.dead) {
+					sounds.flap.play();
+				}
 				bird.raise();
 			}
 		}
